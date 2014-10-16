@@ -1,0 +1,131 @@
+#
+# watcinit.mif -- makeinit file for OS/2....
+#
+#   Threadedness
+#   ------------
+#   MAKEDLL     - Sets compiler options for making (multithreaded) DLLs
+#   MAKEMT      - Sets compiler options for making multithreaded EXEs
+#   (default)   - Options for single threaded EXEs
+#
+#   Source paths (each path must end in '\').
+#   -----------------------------------------
+#   asm     local .asm files
+#   c       local .c files
+#   h       local .h files
+#
+#   Include/library paths
+#   ----------------------------------------------------------------
+#   hdirs   Include directories (e.g. a;b;c )
+#   ldirs   Lib directories (e.g. a;b;c )
+#   pdirs   Path directories (e.g. a;b;c )
+#
+#   Misc.
+#   --------------
+#   libs    (Library list for default line command)
+#   model   (WATCOM C model letter)
+#   ui      (DOS, WIN)
+#   ver     (dbg, prod)
+#
+#   Assume the following env. vars are defined.
+#   ===========================================
+#   (Env. vars are used for items that change from machine to machine).
+#
+#   watcincs    ==> Path for watcomc include files.
+#   watcldos    ==> Path for watcomc library files (DOS).
+#   watclwin    ==> Path for watcomc library files (WIN).
+
+#.OPTIMIZE
+
+os = OS_OS2
+ui = PM
+
+#
+#   Debug
+#
+#   lopt_dbg used both in .exe and .dll links
+#
+msg_dbg   = *** Debug Version (os = $(os), ui = $(ui)) ***
+copt_dbg  = /dDEBUG/d2
+copt1_dbg = /dDEBUG/d1/od
+
+stksize_dbg = 32768
+lopt_dbg    = d a
+lopt1_dbg   = d li
+
+#
+#   Production
+#
+#   lopt_prod used both in .exe and .dll links
+#
+msg_prod   = *** Production Version (os = $(os), ui = $(ui)) ***
+copt_prod  = /d1/oailsr/s/dNDEBUG
+copt1_prod = $(copt_prod)
+
+stksize_prod = 32768
+lopt_prod    =
+lopt1_prod   =
+
+#
+#   General
+#
+msg   = $(msg_$(ver))
+copt  = /zq/m$(model)/w99/e10/4r$(copt_$(ver))/zp4/zc
+copt1 = /zq/m$(model)/w99/e10/4r$(copt1_$(ver))/zp4/zc
+
+# linker options
+stksize = $(stksize_$(ver))
+lopt    = op m,q,st=$(stksize) n $^& $(lopt_$(ver))
+lopt1   = op m,q,st=$(stksize) n $^& $(lopt1_$(ver))
+
+!ifdef MAKEDLL
+copt  = $+$(copt)$-/bd/dDLL/dMULTI_THREAD/s
+copt1 = $+$(copt1)$-/bd/dDLL/dMULTI_THREAD/s
+!else
+copt  = $+$(copt)$-/bm/dMULTI_THREAD
+copt1 = $+$(copt1)$-/bm/dMULTI_THREAD
+!endif
+
+#
+#   Command macros
+#
+#   - Use cc1 for /d1
+#   - $(link) is default
+#
+compiler = wcc386
+
+cc    = $(compiler) $[* $(copt)
+cc1   = $(compiler) $[* $(copt1)
+link  = wlink $(lopt) f $^* l $(libs)
+link1 = wlink $(lopt1) f $^* l $(libs)
+
+#
+#   Libraries & objs
+#
+#   (None defined)
+
+#
+#   Extension rules
+#
+
+.extensions:
+.extensions: .exe .lib .obj .asm .c .h .sqc
+
+.h:     $(h)
+.c:     $(c)
+
+.h.obj:
+    @%null
+
+.c.obj:
+    $(cc)
+
+#
+#   Paths
+#
+
+.before
+    @echo $(msg)
+    @set include=$(h);$(hdirs);$(%watcincs)
+    @set lib=$(ldirs);$(%watclos2)
+    @set path=$(pdirs);$(%watcbins)
+

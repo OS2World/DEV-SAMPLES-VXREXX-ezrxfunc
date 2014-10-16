@@ -1,0 +1,5 @@
+initterm.obj rxsutils.obj funcload.obj func1.obj func2.obj
+..\ezrxfunc.dll
+ezrxfunc.map
+rexx dde4mbs os2386
+..\cset\ezrxfunc.def
